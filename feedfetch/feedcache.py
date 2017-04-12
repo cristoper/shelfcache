@@ -126,14 +126,14 @@ class FeedCache:
 
         if feed is None or feed.get('status') is None:
             logger.info("Failed to fetch feed ({})".format(url))
-            raise self.FetchError("Failed to fetch feed")
+            raise FeedCache.FetchError("Failed to fetch feed")
         elif feed.get('status') > 399:
             logger.info("HTTP error {} ({})".format(feed.get('status'), url))
-            raise self.FetchError("HTTP error", feed.get('status'))
+            raise FeedCache.FetchError("HTTP error", feed.get('status'))
         elif (feed.get('status') < 399 and len(feed.get('entries')) == 0 and
               feed.get('bozo')):
             logger.info("Parse error ({})".format(feed.get('bozo_exception')))
-            raise self.ParseError("Parse error: {}".format(feed.get('bozo_exception')))
+            raise FeedCache.ParseError("Parse error: {}".format(feed.get('bozo_exception')))
 
         logger.info("Got feed from feedparser {}".format(url))
         logger.debug("Feed: {}".format(feed))
