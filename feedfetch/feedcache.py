@@ -34,7 +34,7 @@ class FeedCache:
         pass
 
     class FetchError(Exception):
-        def __init__(self, message: str, statuscode: Optional[int] =None):
+        def __init__(self, message: str, statuscode: Optional[int] =None) -> None:
             super().__init__(message)
             self.status = statuscode
 
