@@ -10,7 +10,7 @@ import datetime
 from http.client import NOT_MODIFIED
 import re
 import logging
-from feedfetch.locked_shelf import MutexShelf, RWShelf
+from .locked_shelf import MutexShelf, RWShelf
 from typing import Union, Type, Callable, Optional
 
 locked_shelf_t = Union[Type[RWShelf], Type[MutexShelf]]
