@@ -53,7 +53,7 @@ class FeedCache:
         self.min_age = min_age
         self.parse = parse
 
-    def __get(self, url: str) -> feedparser.util.FeedParserDict:
+    def __get(self, url: str) -> Feed:
         """Get a feed from the cache db by its url."""
         if os.path.exists(self.path):
             with self.shelf_t(self.path, flag='r') as shelf:
@@ -62,7 +62,7 @@ class FeedCache:
             logger.info("Cache db file does not exist at {}".format(self.path))
         return None
 
-    def __update(self, url: str, feed: feedparser.util.FeedParserDict):
+    def __update(self, url: str, feed: Feed):
         """Update a feed in the cache db."""
         with self.shelf_t(self.path, flag='c') as shelf:
             logger.info("Updated feed for url: {}".format(url))
