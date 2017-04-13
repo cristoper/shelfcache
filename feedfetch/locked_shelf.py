@@ -49,12 +49,34 @@ import fcntl
 from fcntl import flock
 from typing import Union
 import dbm
+import abc
 
 logger = logging.getLogger(__name__)
 lock_t = Union[threading.Lock, multiprocessing.Lock]
 
 
-class MutexShelf(object):
+class LockedShelf(metaclass=abc.ABCMeta):
+    """
+    Abstract base class for LockedShelf implementations.
+    """
+    @abc.abstractmethod
+    def __init__(self, *args, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def close(self) -> None:
+        pass
+
+    @abc.abstractmethod
+    def __enter__(self) -> shelve.Shelf:
+        pass
+
+    @abc.abstractmethod
+    def __exit__(self) -> None:
+        pass
+
+
+class MutexShelf(LockedShelf):
     """
     A heavy-handed approach that acquires a mutex and opens the shelve object
     when initialized, and releases the mutex and closes the shelve when closed.
@@ -88,7 +110,7 @@ class MutexShelf(object):
         self.lock.release()
         logger.info("Released lock for shelf")
 
-    def __enter__(self):
+    def __enter__(self) -> shelve.Shelf:
         """
         Allows the underlying shelve object to be used in a `with` context.
         """
@@ -101,7 +123,7 @@ class MutexShelf(object):
         self.close()
 
 
-class RWShelf(object):
+class RWShelf(LockedShelf):
     """
     Uses the OS's `flock` mechanism to provide a shared-exclusive lock
     around shelve (so that many readers can access the shelve object at once,
@@ -158,7 +180,7 @@ class RWShelf(object):
         self.fd.close()
         logger.info("Released lock for shelf")
 
-    def __enter__(self):
+    def __enter__(self) -> shelve.Shelf:
         """
         Allows the underlying shelve object to be used in a `with` context.
         """

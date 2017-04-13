@@ -10,10 +10,8 @@ import datetime
 from http.client import NOT_MODIFIED
 import re
 import logging
-from .locked_shelf import MutexShelf, RWShelf
+from .locked_shelf import LockedShelf, MutexShelf, RWShelf
 from typing import Union, Type, Callable, Optional
-
-locked_shelf_t = Union[Type[RWShelf], Type[MutexShelf]]
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +36,8 @@ class FeedCache:
             super().__init__(message)
             self.status = statuscode
 
-    def __init__(self, db_path: str, min_age: int = 1200,
-                 shelf_t: locked_shelf_t=RWShelf,
+    def __init__(self, db_path: str, min_age: int=1200,
+                 shelf_t: Type[LockedShelf]=RWShelf,
                  parse: Callable=feedparser.parse) -> None:
         """
         Args:
