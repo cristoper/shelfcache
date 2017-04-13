@@ -1,2 +1,2 @@
-sphinx-autodoc-annotations
+sphinx-autodoc-annotation
 
