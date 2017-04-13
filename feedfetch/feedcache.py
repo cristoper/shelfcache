@@ -3,7 +3,7 @@ The `FeedCache` class provided by this module adds [thread- and
 multiprocess-safe] caching to the `Universal Feed Parser`_.
 
 Usage is as simple as initializing with a path where the database file should be
-created, and then call the `fetch` method with the URL to fetch::
+created, and then calling the `fetch` method with the URL to fetch::
 
     >>> from feedfetch import FeedCache
     >>> cache = FeedCache('cache.db')
