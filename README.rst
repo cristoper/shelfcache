@@ -1,9 +1,9 @@
-feedfetch
-========
+feedfetch ReadMe
+================
 
 feedfetch is a Python package which provides a thread- and multiprocess-safe caching wrapper around the `Universal Feed Parser`_.
 
-Usage is as simple as initializing with a path where the database file should be created, and then calling the fetch method with the URL to fetch:
+Usage is as simple as initializing with a path where the database file should be created, and then calling the :py:meth:`~feedfetch.feedcache.FeedCache.fetch` method with the URL to fetch:
 
 >>> from feedfetch import FeedCache
 >>> cache = FeedCache('cache.db')
@@ -18,29 +18,19 @@ Usage is as simple as initializing with a path where the database file should be
 
 .. _Universal Feed Parser: https://pypi.python.org/pypi/feedparser
 
-Documentation
--------------
-
-TODO: see rtd
 
 Installation
 ------------
 
-TODO:
+Install from this repository with pip::
 
-    pip install github...
+$ pip3 install git+git://github.com:cristoper/feedfetch.git@feedfetch#egg=feedfetch
 
-
-Contribute
-----------
-
-- Issue Tracker: github.com/$project/$project/issues
-- Source Code: github.com/$project/$project
 
 Support
 -------
 
-Feel free to open an issue on Github for help.
+Feel free to open an issue on Github for help: https://github.com/cristoper/feedfetch/issues
 
 License
 -------
