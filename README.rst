@@ -24,7 +24,7 @@ Installation
 
 Install from this repository with pip::
 
-$ pip3 install git+git://github.com:cristoper/feedfetch.git@feedfetch#egg=feedfetch
+$ pip3 install git+git://github.com/cristoper/feedfetch.git@feedfetch#egg=feedfetch
 
 
 Documentation
