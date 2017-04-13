@@ -1,8 +1,34 @@
 """
-The FeedCache class provided by this module adds [thread- and multiprocess-safe]
-caching to Mark Pilgrim's feedparser (https://pypi.python.org/pypi/feedparser)
+The `FeedCache` class provided by this module adds [thread- and
+multiprocess-safe] caching to the `Universal Feed Parser`_.
 
-feedparser on github: https://github.com/kurtmckee/feedparser
+Usage is as simple as initializing with a path where the database file should be
+created, and then call the `fetch` method with the URL to fetch::
+
+    >>> from feedfetch import FeedCache
+    >>> cache = FeedCache('cache.db')
+    >>> feed = cache.fetch('https://hnrss.org/newest')
+    >>> for entry in feed.entries:
+    >>>     # Process feed, etc
+    >>>     print(entry.title)
+    >>>
+    >>> # Fetching a second time will be much faster as it will likely be
+    >>> # returned from cache:
+    >>> feed = cache.fetch('https://hnrss.org/newest')
+
+If a URL generates an error during fetching or parsing, then an exception is
+raised (`URLError`, `FetchError`, or `ParseError`)
+
+For simplicity, HTTP requests are delegated to feedparser (which uses urllib2).
+
+Caching to disk is handled by locking wrappers around the standard library's
+`Shelf` class. Two such wrappers are included in the `locked_shelf` module:
+`MutexShelf` and the flock-based `RWShelf` (which is used by default).
+
+For a similar Python 2 module see Doug Hellmann's feedcache package/article:
+http://feedcache.readthedocs.io/en/latest/
+
+.. _Universal Feed Parser: https://pypi.python.org/pypi/feedparser
 """
 import feedparser
 import os.path
@@ -32,7 +58,8 @@ class FeedCache:
         pass
 
     class FetchError(Exception):
-        def __init__(self, message: str, statuscode: Optional[int] =None) -> None:
+        def __init__(self, message: str,
+                     statuscode: Optional[int] =None) -> None:
             super().__init__(message)
             self.status = statuscode
 
@@ -40,11 +67,14 @@ class FeedCache:
                  shelf_t: Type[LockedShelf]=RWShelf,
                  parse: Callable=feedparser.parse) -> None:
         """
-        Args:
-            db_path: Path to the dbm file which holds the cache
-            min_age: Minimum time (seconds) to keep feed in hard cache. This is
-            overridden by a smaller max-age attribute in the received
-            cache-control http header (default: 1200)
+        __init__(self, db_path, min_age=1200, shelf_t=RWShelf)
+
+        :param db_path:    Path to the dbm file which holds the cache
+        :param min_age:    Minimum time (seconds) to keep feed in hard cache. This
+                        is overridden by a smaller max-age attribute in the
+                        received cache-control http header
+        :param shelf_t: The type of shelf to use (any sublcass of `LockedShelf`,
+                        ie `MutexShelf` or `RWShelf`)
         """
         self.shelf_t = shelf_t
         self.path = db_path
@@ -66,33 +96,32 @@ class FeedCache:
             logger.info("Updated feed for url: {}".format(url))
             shelf[url] = feed
 
-    def fetch(self, url) -> feedparser.util.FeedParserDict:
+    def fetch(self, url: str) -> feedparser.util.FeedParserDict:
         """Fetch an RSS/Atom feed given a URL.
 
         If the feed is in the cache and it is still fresh (younger than
         `min_age`), then it is returned directly.
 
-        If the feed is older than `min_age`, it is re-fetched from the remote
-        server (using etag and/or last-modified headers if available so that the
-        server can return a cached version).
+        If the feed is in the cache but older than `min_age`, it is re-fetched
+        from the remote server (using etag and/or last-modified headers if
+        available so that the server can return a cached version).
 
         When the response is received from the server, then the feed is updated
         in the on-disk cache.
 
-        Args:
-            url: the url of the feed to fetch
+        :param url: the url of the feed to fetch
 
         Returns:
             The parsed feed (or throws an exception if the feed couldn't be
             fetched/parsed)
 
-        Throws:
+        Raises:
             URLError: This is propagated from feedparser/urllib if the domain
-            name cannot be resolved
+                name cannot be resolved
             FetchError: If there was an HTTP error (the http status code is
-            returned in the exception object's `status` attribute)
+                returned in the exception object's `status` attribute)
             ParseError: If feedparser successfully fetched a resource over http,
-            but wasn't able to parse it as a feed.
+                but wasn't able to parse it as a feed.
         """
         etag = None
         lastmod = None

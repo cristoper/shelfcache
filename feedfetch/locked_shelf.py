@@ -1,5 +1,5 @@
 """
-Locking wrappers around the standard shelve class [1] to provide thread- and
+Locking wrappers around the standard shelve_ class to provide thread- and
 multiprocess synchronization.
 
 The shelve docs say:
@@ -17,28 +17,31 @@ process access is unsafe).
 With CPython, threaded access to shelved objects will not corrupt the database
 (because the GIL makes reads/writes of the shelved dictionary atomic), but not
 using a synchronizing lock could still give surprising results (one thread over-
-writing a value set by another thread).
+writing a value just set by another thread).
 
-The GNU dbm implementation includes a built-in reader/writer lock which makes it
-safe to use from several processes, but it is non-blocking so its use requires
-polling on an exception until the read/write is successful.
+Also, the GNU dbm implementation (which is likely the dbm used on Linux systems)
+includes a built-in reader/writer lock which makes it safe to use from several
+processes, but it is non-blocking so its use requires polling on an exception
+until the read/write is successful.
 
 So this module provides two very simple wrappers around shelve which can
 synchronize access between threads and/or processes:
 
-* MutexShelf -- synchronizes both reads and writes with a mutex.
+* `MutexShelf`: synchronizes both reads and writes with a mutex. The initializer
+    takes a lock which can be either a `threading.Lock` (default) or a
+    `multiprocessing.Lock`.
 
-* RWShelf -- uses the OS's `flock` mechanism to provide a shared-exclusive lock
-around shelve a shelve object.
+* `RWShelf`: uses the OS's `flock` mechanism to provide a shared-exclusive
+    lock around shelve a shelve object (works for both threads and processes).
 
 * TODO: A more portable solution than RWShelf would be to implement a
-reader-writer lock in Python. The Standard library does not include one, but
-there are several implementations available on the web. (The only disadvantage
-compared to the system-level flock is that it would only synchronize the python
-program -- but most shelve/dbm databases don't need to be read from several
-programs at once, anyway)
+    reader-writer lock in Python. The Standard library does not include one, but
+    there are several implementations available on the web. (The only
+    disadvantage compared to the system-level flock is that it would only
+    synchronize the python program -- but most shelve/dbm databases don't need
+    to be read from several programs at once, anyway)
 
-1: https://docs.python.org/3/library/shelve.html
+.. _shelve: https://docs.python.org/3/library/shelve.html
 
 """
 import shelve
@@ -82,27 +85,30 @@ class MutexShelf(LockedShelf):
     when initialized, and releases the mutex and closes the shelve when closed.
 
     Intended to be used as a context manager:
-        >> lock = threading.Lock() # or multiprocessing.Lock()
-        >> with MutexShelf(filename, flag='c', lock) as shelf:
-        >>     shelf[key] = value
+
+        >>> lock = threading.Lock() # or multiprocessing.Lock()
+        >>> with MutexShelf(filename, flag='c', lock) as shelf:
+        >>>     shelf[key] = value
     """
 
     def __init__(self, filename: str, flag: str = 'c',
                  lock: lock_t =threading.Lock()) -> None:
         """
+        __init__(self, filename, flag='c', lock=threading.Lock())
+
         Opens shelf (sets shelve object to `shelf` attribute) and locks database
 
-        Args:
-            filename: path to the shelve database file
-            flag: flag to pass to `dbm.open()`
-            lock: the mutex lock to use
+        :param filename: path to the shelve database file
+        :param flag: flag to pass to :py:meth:`dbm.open`
+        :param lock: the mutex lock to use (uses a :py:meth:`threading.Lock` by
+            default)
         """
         self.lock = lock
         self.lock.acquire()
         logger.info("Acquired lock for {}".format(filename))
         self.shelf = shelve.open(filename, flag)
 
-    def close(self):
+    def close(self) -> None:
         """
         Closes shelf and releases lock.
         """
@@ -116,7 +122,7 @@ class MutexShelf(LockedShelf):
         """
         return self.shelf
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
         """
         Close when exiting from `with` context.
         """
@@ -134,12 +140,13 @@ class RWShelf(LockedShelf):
     (However, be aware of the shortcomings and non-portability of flock and the
     other Unix locking mechanisms: http://apenwarr.ca/log/?m=201012#13)
 
-    Intended to be used a context manager:
-        >> with RWShelf(filename, flag='r') as shelf:
-        >>     value = shelf[key] # reader lock (because of 'r' flag)
-        >>
-        >> with RWShelf(filename, flag='c') as shelf:
-        >>     shelf[key] = value # writer lock (because of non-'r' flag)
+    Intended to be used as a context manager:
+
+        >>> with RWShelf(filename, flag='r') as shelf:
+        >>>     value = shelf[key] # reader lock (because of 'r' flag)
+
+        >>> with RWShelf(filename, flag='c') as shelf:
+        >>>     shelf[key] = value # writer lock (because of non-'r' flag)
     """
 
     def __init__(self, filename: str, flag: str = 'c') -> None:
@@ -149,9 +156,8 @@ class RWShelf(LockedShelf):
         raises a FileNotFoundError exception; if the flag is other than 'r',
         then the database file is created.
 
-        Args:
-            filename: path to the shelve database file
-            flag: flag to pass to `dbm.open()`
+        :param filename: path to the shelve database file
+        :param flag: flag to pass to `dbm.open()`
         """
         if flag == 'r':
             ltype = fcntl.LOCK_SH
@@ -172,7 +178,7 @@ class RWShelf(LockedShelf):
         logger.info("Acquired lock for {} ({})".format(filename, ltype))
         self.shelf = shelve.open(filename, flag)
 
-    def close(self):
+    def close(self) -> None:
         """
         Closes shelf and releases lock.
         """
@@ -186,7 +192,7 @@ class RWShelf(LockedShelf):
         """
         return self.shelf
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
         """
         Close when exiting from `with` context.
         """
