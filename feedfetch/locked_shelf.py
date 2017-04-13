@@ -75,7 +75,7 @@ class LockedShelf(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def __exit__(self) -> None:
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
         pass
 
 
