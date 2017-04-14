@@ -32,6 +32,15 @@ Documentation
 
 https://feedfetch.readthedocs.io/en/latest/
 
+Projects
+--------
+FeedMixer_
+    A WSGI micro webservice for mixing Atom/RSS feeds
+
+If you use feedfetch in a project, add a link to it here and give me a pull request (or just mention it in an issue, and I'll add it)!
+
+.. _FeedMixer: https://github.com/cristoper/feedmixer
+
 Support
 -------
 
