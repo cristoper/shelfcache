@@ -107,7 +107,7 @@ class MutexShelf(LockedShelf):
         """
         self.lock = lock
         self.lock.acquire()
-        logger.info("Acquired lock for {}".format(filename))
+        logger.debug("Acquired lock for {}".format(filename))
         self.shelf = shelve.open(filename, flag)
 
     def close(self) -> None:
@@ -116,7 +116,7 @@ class MutexShelf(LockedShelf):
         """
         self.shelf.close()
         self.lock.release()
-        logger.info("Released lock for shelf")
+        logger.debug("Released lock for shelf")
 
     def __enter__(self) -> shelve.Shelf:
         """
@@ -184,7 +184,7 @@ class RWShelf(LockedShelf):
 
         self.fd = open(created_name, 'r+')
         flock(self.fd, ltype)
-        logger.info("Acquired lock for {} ({})".format(filename, ltype))
+        logger.debug("Acquired lock for {} ({})".format(filename, ltype))
         self.shelf = shelve.open(filename, flag)
 
     def close(self) -> None:
@@ -193,7 +193,7 @@ class RWShelf(LockedShelf):
         """
         self.shelf.close()
         self.fd.close()
-        logger.info("Released lock for shelf")
+        logger.debug("Released lock for shelf")
 
     def __enter__(self) -> shelve.Shelf:
         """

@@ -134,7 +134,7 @@ class FeedCache:
             logger.info("Got feed from cache for url: {}".format(url))
             if now < cached.expire_dt:
                 # If cache is fresh, use it without further ado
-                logger.info("Fresh feed found in cache: {}".format(url))
+                logger.info("Returning fresh feed found in cache: {}".format(url))
                 return cached.feed
 
             logger.info("Stale feed found in cache: {}".format(url))
