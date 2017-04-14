@@ -16,6 +16,9 @@ Usage is as simple as initializing with a path where the database file should be
 >>> # returned from cache:
 >>> feed = cache.fetch('https://hnrss.org/newest')
 
+For a similar Python 2 module see Doug Hellmann's feedcache package/article:
+http://feedcache.readthedocs.io/en/latest/
+
 .. _Universal Feed Parser: https://pypi.python.org/pypi/feedparser
 
 
