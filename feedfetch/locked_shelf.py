@@ -53,6 +53,7 @@ from fcntl import flock
 from typing import Union
 import dbm
 import abc
+import os.path
 
 logger = logging.getLogger(__name__)
 lock_t = Union[threading.Lock, multiprocessing.Lock]
@@ -173,7 +174,14 @@ class RWShelf(LockedShelf):
                 # an exception. It doesn't matter, the threads/procs will be
                 # synchronized by the flock below.
                 pass
-        self.fd = open(filename, 'r+')
+
+        # Some implementations of dbm add the .db suffix, and some don't
+        if os.path.exists(filename):
+            created_name = filename
+        else:
+            created_name = filename + ".db"
+
+        self.fd = open(created_name, 'r+')
         flock(self.fd, ltype)
         logger.info("Acquired lock for {} ({})".format(filename, ltype))
         self.shelf = shelve.open(filename, flag)
