@@ -93,7 +93,7 @@ class MutexShelf(LockedShelf):
         >>>     shelf[key] = value
     """
 
-    def __init__(self, filename: str, flag: str = 'c',
+    def __init__(self, filename: str, flag='c',
                  lock: lock_t =threading.Lock()) -> None:
         """
         __init__(self, filename, flag='c', lock=threading.Lock())
@@ -151,7 +151,7 @@ class RWShelf(LockedShelf):
         >>>     shelf[key] = value # writer lock (because of non-'r' flag)
     """
 
-    def __init__(self, filename: str, flag: str = 'c') -> None:
+    def __init__(self, filename: str, flag='c') -> None:
         """
         Opens shelf (sets shelve object to `shelf` attribute) and locks
         database. If the database does not exist and the flag is 'r', then
