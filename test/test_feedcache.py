@@ -1,4 +1,5 @@
 from feedfetch import FeedCache
+from feedfetch.feedcache import Feed
 import unittest
 from unittest.mock import patch, MagicMock, ANY
 from feedfetch.locked_shelf import RWShelf
@@ -29,7 +30,7 @@ def mock_locked_shelf(return_value=None):
 def build_feed(test_file=ATOM_PATH, status=OK,
                exp_time=datetime.datetime.now(), etag='etag',
                modified='modified', max_age=None):
-    """Read an Atom/RSS feed from file and return a FeedCache.Feed object
+    """Read an Atom/RSS feed from file and return a Feed object
     suitable for testing.
 
     Args:
@@ -41,7 +42,7 @@ def build_feed(test_file=ATOM_PATH, status=OK,
         modified: last-modified cache-control header
 
     Returns:
-        A FeedCache.Feed instance populated by parsing the contents of
+        A Feed instance populated by parsing the contents of
         `test_file`
     """
     with open(test_file, 'r') as f:
@@ -55,7 +56,7 @@ def build_feed(test_file=ATOM_PATH, status=OK,
     test_parsed['status'] = status
     if max_age:
         test_parsed['headers'] = {'cache-control': 'max-age={}'.format(max_age)}
-    return FeedCache.Feed(test_parsed, exp_time)
+    return Feed(test_parsed, exp_time)
 
 
 def build_parser(return_value):

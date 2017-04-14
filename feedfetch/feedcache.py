@@ -36,23 +36,24 @@ import datetime
 from http.client import NOT_MODIFIED
 import re
 import logging
-from .locked_shelf import LockedShelf, MutexShelf, RWShelf
-from typing import Union, Type, Callable, Optional
+from .locked_shelf import LockedShelf, RWShelf
+from typing import Type, Callable, Optional
 
 logger = logging.getLogger(__name__)
+
+
+class Feed:
+    """A wrapper class around a parsed feed so we can add some metadata (like
+    an expire time)."""
+    def __init__(self, feed: feedparser.util.FeedParserDict, expire_dt:
+                 datetime.datetime = datetime.datetime.utcnow()) -> None:
+        self.feed = feed
+        self.expire_dt = expire_dt
 
 
 class FeedCache:
     """A wrapper for feedparser which handles caching using a locking wrapper
     around the standard shelve library. Thread and multiprocess safe."""
-
-    class Feed:
-        """A wrapper class around a parsed feed so we can add some metadata (like
-        an expire time)."""
-        def __init__(self, feed: feedparser.util.FeedParserDict, expire_dt:
-                     datetime.datetime = datetime.datetime.utcnow()) -> None:
-            self.feed = feed
-            self.expire_dt = expire_dt
 
     class ParseError(Exception):
         pass
@@ -70,9 +71,9 @@ class FeedCache:
         __init__(self, db_path, min_age=1200, shelf_t=RWShelf)
 
         :param db_path:    Path to the dbm file which holds the cache
-        :param min_age:    Minimum time (seconds) to keep feed in hard cache. This
-                        is overridden by a smaller max-age attribute in the
-                        received cache-control http header
+        :param min_age:    Minimum time (seconds) to keep feed in hard cache.
+            This is overridden by a smaller max-age attribute in the received
+            cache-control http header
         :param shelf_t: The type of shelf to use (any sublcass of `LockedShelf`,
                         ie `MutexShelf` or `RWShelf`)
         """
@@ -149,7 +150,7 @@ class FeedCache:
         logger.info("Fetching from remote {}".format(url))
         feed = self.parse(url, etag=etag, modified=lastmod)
 
-        fetched = FeedCache.Feed(feed)
+        fetched = Feed(feed)
 
         if feed is None or feed.get('status') is None:
             logger.info("Failed to fetch feed ({})".format(url))
