@@ -1,7 +1,7 @@
 feedfetch ReadMe
 ================
 
-feedfetch is a Python package which provides a thread- and multiprocess-safe caching wrapper around the `Universal Feed Parser`_.
+feedfetch is a Python3 package which provides a thread- and multiprocess-safe caching wrapper around the `Universal Feed Parser`_.
 
 Usage is as simple as initializing with a path where the database file should be created, and then calling the `FeedCache.fetch()` method with the URL to fetch:
 
