@@ -19,10 +19,11 @@ With CPython, threaded access to shelved objects will not corrupt the database
 using a synchronizing lock could still give surprising results (one thread over-
 writing a value just set by another thread).
 
-Also, the GNU dbm implementation (which is likely the dbm used on Linux systems)
-includes a built-in reader/writer lock which makes it safe to use from several
-processes, but it is non-blocking so its use requires polling on an exception
-until the read/write is successful.
+Also, the GNU dbm implementation includes a built-in reader/writer lock which
+makes it safe to use from several processes, but it is non-blocking so its use
+requires polling on an exception until the read/write is successful. (On most
+systems I think using gdbm requires installing an extra pacakge --
+`python3-gdbm` on Debian.)
 
 So this module provides two very simple wrappers around shelve which can
 synchronize access between threads and/or processes:
