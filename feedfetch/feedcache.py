@@ -25,30 +25,19 @@ Caching to disk is handled by locking wrappers around the standard library's
 `Shelf` class. Two such wrappers are included in the `locked_shelf` module:
 `MutexShelf` and the flock-based `RWShelf` (which is used by default).
 
-For a similar Python 2 module see Doug Hellmann's feedcache package/article:
-http://feedcache.readthedocs.io/en/latest/
+For a similar module (for Python 2) see Doug Hellmann's feedcache
+package/article: http://feedcache.readthedocs.io/en/latest/
 
 .. _Universal Feed Parser: https://pypi.python.org/pypi/feedparser
 """
 import feedparser
-import os.path
-import datetime
 from http.client import NOT_MODIFIED
 import re
 import logging
-from .locked_shelf import LockedShelf, RWShelf
-from typing import Type, Callable, Optional
+from typing import Callable, Optional
+from .shelfcache import ShelfCache
 
 logger = logging.getLogger(__name__)
-
-
-class Feed:
-    """A wrapper class around a parsed feed so we can add some metadata (like
-    an expire time)."""
-    def __init__(self, feed: feedparser.util.FeedParserDict, expire_dt:
-                 datetime.datetime = datetime.datetime.utcnow()) -> None:
-        self.feed = feed
-        self.expire_dt = expire_dt
 
 
 class FeedCache:
@@ -64,38 +53,26 @@ class FeedCache:
             super().__init__(message)
             self.status = statuscode
 
-    def __init__(self, db_path: str, min_age: int=1200,
-                 shelf_t: Type[LockedShelf]=RWShelf,
+    def __init__(self, db_path='fmcache.db', min_age: int=1200,
+                 cache: Optional[ShelfCache]=None,
                  parse: Callable=feedparser.parse) -> None:
         """
-        __init__(self, db_path, min_age=1200, shelf_t=RWShelf)
+        __init__(self, db_path='fmcache.db', min_age=1200, cache=None)
+
+        By default will create cache database at `db_path`, but if a ShelfCache
+        instance is provided as `cache`, will use that instead.
 
         :param db_path:    Path to the dbm file which holds the cache
         :param min_age:    Minimum time (seconds) to keep feed in hard cache.
             This is overridden by a smaller max-age attribute in the received
             cache-control http header
-        :param shelf_t: The type of shelf to use (any sublcass of `LockedShelf`,
-                        ie `MutexShelf` or `RWShelf`)
+        :param cache:   The ShelfCache instance to use for caching.
         """
-        self.shelf_t = shelf_t
-        self.path = db_path
+        if cache is None:
+            cache = ShelfCache(db_path=db_path, exp_seconds=min_age)
+        self.cache = cache
         self.min_age = min_age
         self.parse = parse
-
-    def __get(self, url: str) -> Feed:
-        """Get a feed from the cache db by its url."""
-        if os.path.exists(self.path):
-            with self.shelf_t(self.path, flag='r') as shelf:
-                return shelf.get(url)
-        else:
-            logger.info("Cache db file does not exist at {}".format(self.path))
-        return None
-
-    def __update(self, url: str, feed: Feed):
-        """Update a feed in the cache db."""
-        with self.shelf_t(self.path, flag='c') as shelf:
-            logger.info("Updated feed for url: {}".format(url))
-            shelf[url] = feed
 
     def fetch(self, url: str) -> feedparser.util.FeedParserDict:
         """Fetch an RSS/Atom feed given a URL.
@@ -126,21 +103,22 @@ class FeedCache:
         """
         etag = None
         lastmod = None
-        now = datetime.datetime.now()
 
         logger.info("Fetching feed for url: {}".format(url))
-        cached = self.__get(url)
-        if cached:
+        item = self.cache.get(url)
+        if item:
             logger.info("Got feed from cache for url: {}".format(url))
-            if now < cached.expire_dt:
+            cached, expired = item.data, item.expired
+            if not expired:
                 # If cache is fresh, use it without further ado
-                logger.info("Returning fresh feed found in cache: {}".format(url))
-                return cached.feed
+                logger.info("Returning fresh feed found in cache: {}"
+                            .format(url))
+                return cached
 
             logger.info("Stale feed found in cache: {}".format(url))
-            etag = cached.feed.get('etag')
+            etag = cached.get('etag')
             etag = etag.lstrip('W/') if etag else None  # strip weak etag
-            lastmod = cached.feed.get('modified')
+            lastmod = cached.get('modified')
         else:
             logger.info("No feed in cache for url: {}".format(url))
 
@@ -148,36 +126,35 @@ class FeedCache:
         # and/or last-modified headers (if available) so we only fetch and
         # parse it if it is new/updated.
         logger.info("Fetching from remote {}".format(url))
-        feed = self.parse(url, etag=etag, modified=lastmod)
+        fetched = self.parse(url, etag=etag, modified=lastmod)
 
-        fetched = Feed(feed)
-
-        if feed is None or feed.get('status') is None:
+        if fetched is None or fetched.get('status') is None:
             logger.info("Failed to fetch feed ({})".format(url))
             raise FeedCache.FetchError("Failed to fetch feed")
-        elif feed.get('status') > 399:
-            logger.info("HTTP error {} ({})".format(feed.get('status'), url))
-            raise FeedCache.FetchError("HTTP error", feed.get('status'))
-        elif (feed.get('status') < 399 and len(feed.get('entries')) == 0 and
-              feed.get('bozo')):
-            logger.info("Parse error ({})".format(feed.get('bozo_exception')))
-            raise FeedCache.ParseError("Parse error: {}".format(feed.get('bozo_exception')))
+        elif fetched.get('status') > 399:
+            logger.info("HTTP error {} ({})".format(fetched.get('status'), url))
+            raise FeedCache.FetchError("HTTP error", fetched.get('status'))
+        elif (fetched.get('status') < 399 and
+              len(fetched.get('entries')) == 0 and fetched.get('bozo')):
+            logger.info("Parse error ({})"
+                        .format(fetched.get('bozo_exception')))
+            raise FeedCache.ParseError("Parse error: {}"
+                                       .format(fetched.get('bozo_exception')))
 
         logger.info("Got feed from feedparser {}".format(url))
-        logger.debug("Feed: {}".format(feed))
-        if feed.get('status') == NOT_MODIFIED:
+        logger.debug("Feed: {}".format(fetched))
+        if fetched.get('status') == NOT_MODIFIED:
             # Source says feed is still fresh
             logger.info("Server says feed is still fresh: {}".format(url))
-            fetched.feed = cached.feed
+            fetched = cached
 
         # Add to/update cache with new expire_dt
         # Using max-age parsed from cache-control header, if it exists
-        cc_header = fetched.feed.get('headers').get('cache-control') or ''
+        cc_header = fetched.get('headers').get('cache-control') or ''
         ma_match = re.search('max-age=(\d+)', cc_header)
         if ma_match:
             min_age = min(int(ma_match.group(1)), self.min_age)
         else:
             min_age = self.min_age
-        fetched.expire_dt = now + datetime.timedelta(seconds=min_age)
-        self.__update(url, fetched)
-        return fetched.feed
+        self.cache.create_or_update(url, data=fetched, exp_seconds=min_age)
+        return fetched
