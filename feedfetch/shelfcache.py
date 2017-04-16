@@ -122,7 +122,7 @@ class ShelfCache:
             del shelf[key]
             logger.info("Deleted item for key: {}".format(key))
 
-    def __delitem__(self, key: str) -> None:
+    def __delitem__(self, key) -> None:
         self.delete(key)
 
     def prune(self, older_than: Optional[datetime]=None) -> int:
@@ -148,7 +148,7 @@ class ShelfCache:
                 logger.info("Pruned item for key: {}".format(key))
         return len(keys_to_delete)
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Delete all items in cache.
         """
