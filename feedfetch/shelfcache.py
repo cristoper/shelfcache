@@ -105,7 +105,7 @@ class ShelfCache:
         """
         self.create_or_update(key, data=value)
 
-    def update_expires(self, key, expire_dt: Optional[datetime]=None):
+    def update_expires(self, key, expire_dt: Optional[datetime]=None) -> None:
         """
         Update a cached item's expire_dt without returning the actual data.
         """
@@ -114,9 +114,24 @@ class ShelfCache:
         d, _ = self[key]
         self.create_or_update(key, data=d, expire_dt=expire_dt)
 
-    def prune(self, older_than: Optional[datetime]=None):
+    def delete(self, key: str) -> None:
         """
-        :param older_than: Delete all items in cache older than this datetime.
+        Delete `key` from cache database.
+        """
+        with self.shelf_t(self.db_path, flag='c') as shelf:
+            del shelf[key]
+            logger.info("Deleted item for key: {}".format(key))
+
+    def __delitem__(self, key: str) -> None:
+        self.delete(key)
+
+    def prune(self, older_than: Optional[datetime]=None) -> int:
+        """
+        :param older_than: Delete all items in cache older than the given
+            datetime. If `older_than` is None, use datetime.utcnow()
+
+        Returns:
+            The number of items that were pruned.
         """
         pass
 
