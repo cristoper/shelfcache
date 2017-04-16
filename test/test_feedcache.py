@@ -75,8 +75,6 @@ def build_parser(return_value):
 
 
 class TestFetch(unittest.TestCase):
-    def setUp(self):
-        pass
 
     @patch('os.path.exists')
     def test_db_not_exists(self, mock_os_path_exists):
