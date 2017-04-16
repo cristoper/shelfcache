@@ -325,3 +325,31 @@ class TestClear(unittest.TestCase):
         item2 = mock_dict.get('key2')
         self.assertIsNone(item1)
         self.assertIsNone(item2)
+
+
+class TestPrune(unittest.TestCase):
+    @patch('os.path.exists')
+    def test_prune(self, mock_os_path_exists):
+        """
+        Create some items and then test that the oldest is pruned.
+        """
+        # so we don't need an actual db file:
+        mock_os_path_exists.return_value = True
+
+        mock_shelf = make_mock_locked_shelf()
+        tomorrow = datetime.utcnow() + timedelta(days=1)
+        yesterday = datetime.utcnow() + timedelta(days=-1)
+        today = datetime.utcnow()
+
+        # DUT:
+        sc = ShelfCache(db_path='dummy', shelf_t=mock_shelf)
+        sc.create_or_update('old', data='old', expire_dt=yesterday)
+        sc.create_or_update('new', data='new', expire_dt=tomorrow)
+
+        sc.prune(older_than=today)
+
+        old = sc.get('old')
+        new = sc.get('new')
+
+        self.assertIsNone(old)
+        self.assertEqual('new', new.data)

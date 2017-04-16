@@ -133,7 +133,20 @@ class ShelfCache:
         Returns:
             The number of items that were pruned.
         """
-        pass
+        if older_than is None:
+            older_than = datetime.utcnow()
+
+        keys_to_delete = []
+        with self.shelf_t(self.db_path, flag='c') as shelf:
+            for key, item in shelf.items():
+                exp_d = item.expire_dt
+                if exp_d < older_than:
+                    keys_to_delete.append(key)
+
+            for k in keys_to_delete:
+                del shelf[k]
+                logger.info("Pruned item for key: {}".format(key))
+        return len(keys_to_delete)
 
     def clear(self):
         """
