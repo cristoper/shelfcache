@@ -57,7 +57,10 @@ class ShelfCache:
                 val = shelf.get(key)  # type: Optional[Item]
                 if val is not None:
                     now = datetime.utcnow()
-                    expired = val.expire_dt < now
+                    if val.expire_dt is None:
+                        expired = False
+                    else:
+                        expired = val.expire_dt < now
                     return CacheResult(data=val.data, expired=expired)
         else:
             logger.info("Cache db file does not exist at {}"
@@ -101,6 +104,15 @@ class ShelfCache:
         expire. To set an expiry datetime, use :meth:`set_or_update` instead.
         """
         self.create_or_update(key, data=value)
+
+    def update_expires(self, key, expire_dt: Optional[datetime]=None):
+        """
+        Update a cached item's expire_dt without returning the actual data.
+        """
+        if expire_dt is None:
+            expire_dt = datetime.utcnow()
+        d, _ = self[key]
+        self.create_or_update(key, data=d, expire_dt=expire_dt)
 
     def prune(self, older_than: Optional[datetime]=None):
         """

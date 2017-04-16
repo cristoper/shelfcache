@@ -120,6 +120,7 @@ class TestGet(unittest.TestCase):
         """
         # so we don't need an actual db file:
         mock_os_path_exists.return_value = True
+
         exp_time = datetime.utcnow() + timedelta(days=-1)
         test_item = Item(data='data', expire_dt=exp_time)
         test_val = {'key': test_item}
@@ -139,6 +140,7 @@ class TestGet(unittest.TestCase):
         """
         # so we don't need an actual db file:
         mock_os_path_exists.return_value = True
+
         exp_time = datetime.utcnow() + timedelta(days=-1)
         test_item = Item(data='data', expire_dt=exp_time)
         test_val = {'key': test_item}
@@ -153,7 +155,6 @@ class TestGet(unittest.TestCase):
 
 
 class TestSet(unittest.TestCase):
-
     def test_setitem(self):
         """
         Setting item with __setitem__ should never expire.
@@ -204,3 +205,35 @@ class TestSet(unittest.TestCase):
 
         self.assertEqual('val', data)
         self.assertEqual(exp, future)
+
+
+class TestUpdateExpires(unittest.TestCase):
+    @patch('os.path.exists')
+    def test_update_expires(self, mock_os_path_exists):
+        """
+        Set an item, then ensure its expires date can be updated.
+        """
+        # so we don't need an actual db file:
+        mock_os_path_exists.return_value = True
+
+        wrapped_dict = {}
+        mock_shelf = make_mock_locked_shelf(wrapped_dict)
+        mock_dict = mock_shelf.return_value.__enter__.return_value
+
+        # DUT:
+        sc = ShelfCache(db_path='dummy', shelf_t=mock_shelf)
+
+        # Set some data
+        sc['key'] = 'val'
+        item = mock_dict.get('key')
+        _, old_exp = item.data, item.expire_dt
+        self.assertIsNone(old_exp)
+
+        # Update expires
+        tomorrow = datetime.utcnow() + timedelta(days=1)
+        sc.update_expires('key', tomorrow)
+        item = mock_dict.get('key')
+        data, new_exp = item.data, item.expire_dt
+
+        self.assertEqual('val', data)
+        self.assertEqual(tomorrow, new_exp)
