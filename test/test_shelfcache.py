@@ -13,10 +13,10 @@ def make_mock_locked_shelf(wrapped_dict=None):
     if wrapped_dict is None:
         wrapped_dict = {}
     mock_shelf = MagicMock(spec=RWShelf)
-    mock_dict = MagicMock(spec=dict)
-    mock_dict.__getitem__.side_effect = wrapped_dict.__getitem__
+    mock_dict = MagicMock(wraps=wrapped_dict)
+
+    # wraps doesn't seem to actually wrap these magic methods:
     mock_dict.__setitem__.side_effect = wrapped_dict.__setitem__
-    mock_dict.get.side_effect = wrapped_dict.get
     mock_dict.__delitem__.side_effect = wrapped_dict.__delitem__
     mock_shelf.return_value.__enter__.return_value = mock_dict
     return mock_shelf
@@ -227,7 +227,7 @@ class TestUpdateExpires(unittest.TestCase):
         # Set some data
         sc['key'] = 'val'
         item = mock_dict.get('key')
-        _, old_exp = item.data, item.expire_dt
+        old_exp = item.expire_dt
         self.assertIsNone(old_exp)
 
         # Update expires
@@ -258,7 +258,7 @@ class TestDel(unittest.TestCase):
         # create item
         sc['key'] = 'val'
         item = mock_dict.get('key')
-        data, _ = item.data, item.expire_dt
+        data = item.data
         self.assertEqual('val', data)
 
         # delete item
@@ -283,7 +283,7 @@ class TestDel(unittest.TestCase):
         # create item
         sc['key'] = 'val'
         item = mock_dict.get('key')
-        data, _ = item.data, item.expire_dt
+        data = item.data
         self.assertEqual('val', data)
 
         # delete item
@@ -292,9 +292,9 @@ class TestDel(unittest.TestCase):
         self.assertIsNone(val)
 
 
-class TestClearAll(unittest.TestCase):
+class TestClear(unittest.TestCase):
     @patch('os.path.exists')
-    def test_clear_all(self, mock_os_path_exists):
+    def test_clear(self, mock_os_path_exists):
         """
         Set some items then test that they are all deleted.
         """
@@ -310,15 +310,18 @@ class TestClearAll(unittest.TestCase):
 
         # Set some data
         sc['key'] = 'val'
-        item = mock_dict.get('key')
-        _, old_exp = item.data, item.expire_dt
-        self.assertIsNone(old_exp)
+        sc['key2'] = 'val2'
+        item1 = mock_dict.get('key')
+        item2 = mock_dict.get('key2')
+        d1 = item1.data
+        d2 = item2.data
+        self.assertEqual('val', d1)
+        self.assertEqual('val2', d2)
 
-        # Update expires
-        tomorrow = datetime.utcnow() + timedelta(days=1)
-        sc.update_expires('key', tomorrow)
-        item = mock_dict.get('key')
-        data, new_exp = item.data, item.expire_dt
+        # Clear
+        sc.clear()
 
-        self.assertEqual('val', data)
-        self.assertEqual(tomorrow, new_exp)
+        item1 = mock_dict.get('key')
+        item2 = mock_dict.get('key2')
+        self.assertIsNone(item1)
+        self.assertIsNone(item2)

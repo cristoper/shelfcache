@@ -135,8 +135,10 @@ class ShelfCache:
         """
         pass
 
-    def clear_all(self):
+    def clear(self):
         """
         Delete all items in cache.
         """
-        pass
+        with self.shelf_t(self.db_path, flag='c') as shelf:
+            shelf.clear()
+            logger.info("Deleted all items in cache.")
