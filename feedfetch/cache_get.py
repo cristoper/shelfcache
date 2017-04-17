@@ -16,7 +16,7 @@ the URL to fetch::
 
     >>> from feedfetch.cache_get import cache_get
     >>> from feedfetch import ShelfCache
-    >>> cache = FeedCache('path/to/cache.db')
+    >>> cache = ShelfCache('path/to/cache.db')
     >>> response = cache_get(cache, url='https://hnrss.org/newest')
     >>> response.status_code
     200
