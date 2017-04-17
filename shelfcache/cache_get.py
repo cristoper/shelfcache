@@ -14,8 +14,7 @@ Usage is as simple as initializing a ShelfCache object with a path where the
 database file should be created, and then calling the `cache_get` function with
 the URL to fetch::
 
-    >>> from feedfetch.cache_get import cache_get
-    >>> from feedfetch import ShelfCache
+    >>> from shelfcache import cache_get, ShelfCache
     >>> cache = ShelfCache('path/to/cache.db')
     >>> response = cache_get(cache, url='https://hnrss.org/newest')
     >>> response.status_code

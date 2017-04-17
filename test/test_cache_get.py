@@ -1,9 +1,9 @@
 import requests
 import requests.exceptions
-from feedfetch.cache_get import cache_get
+from shelfcache import cache_get
 import unittest
 from unittest.mock import MagicMock
-from feedfetch.shelfcache import CacheResult
+from shelfcache.shelfcache import CacheResult
 
 NOT_MODIFIED = 304
 OK = 200

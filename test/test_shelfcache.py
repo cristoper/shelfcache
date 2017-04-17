@@ -1,7 +1,7 @@
-from feedfetch.shelfcache import ShelfCache, Item
+from shelfcache.shelfcache import ShelfCache, Item
 import unittest
 from unittest.mock import MagicMock, patch
-from feedfetch.locked_shelf import RWShelf
+from shelfcache.locked_shelf import RWShelf
 from datetime import datetime, timedelta
 
 
