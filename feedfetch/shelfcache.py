@@ -1,3 +1,16 @@
+"""
+The `ShelfCache` class in this module implements a generic thread- and
+multiprocess-safe key-value caching store. The values can be any object which
+can be pickled.
+
+Caching to disk is handled by locking wrappers around the standard library's
+`Shelf` class. Two such wrappers are included in the `locked_shelf` module:
+`MutexShelf` and the flock-based `RWShelf` (which is used by default).
+
+For a similar approach (for Python 2) -- which implements caching on top of a
+locking wrapper around the shelve library -- see Doug Hellmann's feedcache
+package/article: http://feedcache.readthedocs.io/en/latest/
+"""
 from .locked_shelf import LockedShelf, RWShelf
 from datetime import datetime, timedelta
 from typing import Type, Optional, NamedTuple, Any
