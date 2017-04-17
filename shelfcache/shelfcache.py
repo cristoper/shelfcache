@@ -40,9 +40,10 @@ class Item:
         :param expire_dt: The date the item expires (None means the item never
             expires)
         """
+        now = datetime.utcnow()
         self.data = data
-        self.created_dt = datetime.utcnow()
-        self.updated_dt = datetime.utcnow()
+        self.created_dt = now
+        self.updated_dt = now
         self.expire_dt = expire_dt
 
 
@@ -108,8 +109,15 @@ class ShelfCache:
         item.expire_dt = expire_dt
 
         with self.shelf_t(self.db_path, flag='c') as shelf:
+            if key in shelf.keys():
+                # If this item already exists, preserve its created_dt and
+                # update its updated_dt
+                item.created_dt = shelf.get('key').created_dt
+                item.updated_dt = datetime.utcnow()
+                logger.info("Updated item for key: {}".format(key))
+            else:
+                logger.info("Created item for key: {}".format(key))
             shelf[key] = item
-            logger.info("Updated item for key: {}".format(key))
 
     def __setitem__(self, key, value) -> None:
         """

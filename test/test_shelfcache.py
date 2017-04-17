@@ -190,6 +190,31 @@ class TestSet(unittest.TestCase):
         self.assertEqual('val', data)
         self.assertEqual(exp, tomorrow)
 
+    def test_create_or_update_updates(self):
+        """
+        Check that updating an existing item with create_or_update will update
+        the updated_dt.
+        """
+        mock_shelf = make_mock_locked_shelf()
+        mock_dict = mock_shelf.return_value.__enter__.return_value
+
+        # DUT:
+        sc = ShelfCache(db_path='dummy', shelf_t=mock_shelf)
+
+        # create
+        sc.create_or_update('key', data='original')
+        item = mock_dict.get('key')
+        data, created, updated = item.data, item.created_dt, item.updated_dt
+        self.assertEqual('original', data)
+        self.assertEqual(created, updated)
+
+        # update
+        sc.create_or_update('key', data='new')
+        item = mock_dict.get('key')
+        data, created, updated = item.data, item.created_dt, item.updated_dt
+        self.assertEqual('new', data)
+        self.assertTrue(created < updated)
+
     def test_create_or_update_seconds(self):
         """
         Check that key and expire_dt is set with set() passing seconds.
