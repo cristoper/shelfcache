@@ -37,7 +37,7 @@ class TestFetch(unittest.TestCase):
         """Simulate a URL not in the cache, and verify that FeedCache tries to
         fetch it over http."""
         # setup mock locked_shelf:
-        new_feed = build_response(contents=TEST_FEED)
+        new_feed = build_response()
         mock_shelf = mock_shelfcache(None)
 
         # setup mock feedparser.parse method

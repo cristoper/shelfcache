@@ -16,8 +16,6 @@ def mock_shelfcache(return_value=None):
 
     Args:
         return_value: the value returned by the mocked shelf.get() method
-    Returns:
-        a MagicMock object spec'd to RWShelf
     """
     mock_shelf = MagicMock()
     mock_shelf.exp_seconds = -1
@@ -26,12 +24,10 @@ def mock_shelfcache(return_value=None):
     return mock_shelf
 
 
-def build_response(contents="test", status=OK,
-                   etag='etag', modified='modified', max_age=None):
+def build_response(status=OK, etag='etag', modified='modified', max_age=None):
     """Make a requests.Response object suitable for testing.
 
     Args:
-        contents: the contents of the requested resource
         status: HTTP status
         exp-time: cache expire time (set to future for fresh cache, past for
             stale cache (defaults to stale))
@@ -103,7 +99,7 @@ class TestCacheGet(unittest.TestCase):
     def test_stale_not_modified(self):
         """Simulate a stale cached item and verify that cache_get fetches it and
         then asks the remote server for an updated."""
-        # setup mocked RWShelf
+        # setup mocked ShelfCache
         stale = build_response(status=NOT_MODIFIED)
         mock_shelf = mock_shelfcache(CacheResult(data=stale,
                                                  expired=True))
@@ -121,7 +117,7 @@ class TestCacheGet(unittest.TestCase):
     def test_stale_modified(self):
         """Simulate a stale cached item and verify that cache_get fetches it and
         then updates with new feed from server."""
-        # setup mocked RWShelf
+        # setup mocked ShelfCache
         stale = build_response(status=OK)
         mock_shelf = mock_shelfcache(CacheResult(data=stale,
                                                  expired=True))
@@ -130,7 +126,7 @@ class TestCacheGet(unittest.TestCase):
         # that FeedCache parsed the cache-control header)
         mock_headers = MagicMock(spec=dict)
         mock_headers.get.return_value = 'max-age=10'
-        new = build_response(status=OK, contents="changed content")
+        new = build_response(status=OK)
         new.headers = mock_headers
         mock_getter = build_getter(new)
 
@@ -149,7 +145,7 @@ class TestCacheGet(unittest.TestCase):
 
     def test_404(self):
         """Simulate fetching a non-existent resource."""
-        # setup mocked RWShelf
+        # setup mocked ShelfCache
         feed404 = build_response(status=404)
         mock_shelf = mock_shelfcache(None)
 
