@@ -90,7 +90,7 @@ class ShelfCache:
             cached item expires.
         """
         item = Item(data=data)
-        if expire_dt is None and exp_seconds:
+        if expire_dt is None and exp_seconds and exp_seconds > -1:
             expire_dt = item.created_dt + timedelta(seconds=exp_seconds)
         item.expire_dt = expire_dt
 

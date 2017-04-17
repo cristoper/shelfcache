@@ -207,6 +207,23 @@ class TestSet(unittest.TestCase):
         self.assertEqual('val', data)
         self.assertEqual(exp, future)
 
+    def test_create_or_update_seconds_neg1(self):
+        """
+        Check that passing -1 to exp_seconds results in item having no expiry
+        datetime.
+        """
+        mock_shelf = make_mock_locked_shelf()
+        mock_dict = mock_shelf.return_value.__enter__.return_value
+
+        # DUT:
+        sc = ShelfCache(db_path='dummy', shelf_t=mock_shelf)
+        sc.create_or_update('key', data='val', exp_seconds=-1)
+        item = mock_dict.get('key')
+        data, exp = item.data, item.expire_dt
+
+        self.assertEqual('val', data)
+        self.assertIsNone(exp)
+
 
 class TestUpdateExpires(unittest.TestCase):
     @patch('os.path.exists')
