@@ -31,11 +31,10 @@ package/article: http://feedcache.readthedocs.io/en/latest/
 .. _Universal Feed Parser: https://pypi.python.org/pypi/feedparser
 """
 import feedparser
-from http.client import NOT_MODIFIED
-import re
 import logging
 from typing import Callable, Optional
 from .shelfcache import ShelfCache
+from .cache_get import cache_get
 
 logger = logging.getLogger(__name__)
 
@@ -47,15 +46,9 @@ class FeedCache:
     class ParseError(Exception):
         pass
 
-    class FetchError(Exception):
-        def __init__(self, message: str,
-                     statuscode: Optional[int] =None) -> None:
-            super().__init__(message)
-            self.status = statuscode
-
     def __init__(self, db_path='fmcache.db', min_age: int=1200,
                  cache: Optional[ShelfCache]=None,
-                 parse: Callable=feedparser.parse) -> None:
+                 cache_get: Callable=cache_get) -> None:
         """
         __init__(self, db_path='fmcache.db', min_age=1200, cache=None)
 
@@ -72,20 +65,13 @@ class FeedCache:
             cache = ShelfCache(db_path=db_path, exp_seconds=min_age)
         self.cache = cache
         self.min_age = min_age
-        self.parse = parse
+        self.cache_get = cache_get
 
     def fetch(self, url: str) -> feedparser.util.FeedParserDict:
         """Fetch an RSS/Atom feed given a URL.
 
-        If the feed is in the cache and it is still fresh (younger than
-        `min_age`), then it is returned directly.
-
-        If the feed is in the cache but older than `min_age`, it is re-fetched
-        from the remote server (using etag and/or last-modified headers if
-        available so that the server can return a cached version).
-
-        When the response is received from the server, then the feed is updated
-        in the on-disk cache.
+        Uses `ShelfCache` to handle caching feeds (and sending
+        etag/last-modified headers to servers when re-fetching stale feeds.)
 
         :param url: the url of the feed to fetch
 
@@ -94,48 +80,14 @@ class FeedCache:
             fetched/parsed)
 
         Raises:
-            URLError: This is propagated from feedparser/urllib if the domain
-                name cannot be resolved
-            FetchError: If there was an HTTP error (the http status code is
-                returned in the exception object's `status` attribute)
             ParseError: If feedparser successfully fetched a resource over http,
                 but wasn't able to parse it as a feed.
         """
-        etag = None
-        lastmod = None
+        resp = self.cache_get(self.cache, url=url)
+        fetched = feedparser.parse(resp.text)
 
-        logger.info("Fetching feed for url: {}".format(url))
-        item = self.cache.get(url)
-        if item:
-            logger.info("Got feed from cache for url: {}".format(url))
-            cached, expired = item.data, item.expired
-            if not expired:
-                # If cache is fresh, use it without further ado
-                logger.info("Returning fresh feed found in cache: {}"
-                            .format(url))
-                return cached
-
-            logger.info("Stale feed found in cache: {}".format(url))
-            etag = cached.get('etag')
-            etag = etag.lstrip('W/') if etag else None  # strip weak etag
-            lastmod = cached.get('modified')
-        else:
-            logger.info("No feed in cache for url: {}".format(url))
-
-        # Cache wasn't fresh in db, so we'll request it, but give origin etag
-        # and/or last-modified headers (if available) so we only fetch and
-        # parse it if it is new/updated.
-        logger.info("Fetching from remote {}".format(url))
-        fetched = self.parse(url, etag=etag, modified=lastmod)
-
-        if fetched is None or fetched.get('status') is None:
-            logger.info("Failed to fetch feed ({})".format(url))
-            raise FeedCache.FetchError("Failed to fetch feed")
-        elif fetched.get('status') > 399:
-            logger.info("HTTP error {} ({})".format(fetched.get('status'), url))
-            raise FeedCache.FetchError("HTTP error", fetched.get('status'))
-        elif (fetched.get('status') < 399 and
-              len(fetched.get('entries')) == 0 and fetched.get('bozo')):
+        parse_err = len(fetched.get('entries')) == 0 and fetched.get('bozo')
+        if fetched is None or parse_err:
             logger.info("Parse error ({})"
                         .format(fetched.get('bozo_exception')))
             raise FeedCache.ParseError("Parse error: {}"
@@ -143,18 +95,5 @@ class FeedCache:
 
         logger.info("Got feed from feedparser {}".format(url))
         logger.debug("Feed: {}".format(fetched))
-        if fetched.get('status') == NOT_MODIFIED:
-            # Source says feed is still fresh
-            logger.info("Server says feed is still fresh: {}".format(url))
-            fetched = cached
 
-        # Add to/update cache with new expire_dt
-        # Using max-age parsed from cache-control header, if it exists
-        cc_header = fetched.get('headers').get('cache-control') or ''
-        ma_match = re.search('max-age=(\d+)', cc_header)
-        if ma_match:
-            min_age = min(int(ma_match.group(1)), self.min_age)
-        else:
-            min_age = self.min_age
-        self.cache.create_or_update(url, data=fetched, exp_seconds=min_age)
         return fetched
