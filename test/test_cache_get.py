@@ -57,7 +57,7 @@ def build_getter(return_value):
         (probably a requests.Response object.
 
     Returns:
-        A MagicMock instance spec'd to feedparser.parse
+        A MagicMock instance spec'd to requests.get
     """
     mock_getter = MagicMock(spec=requests.get)
     mock_getter.return_value = return_value
