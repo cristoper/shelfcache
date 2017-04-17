@@ -1,21 +1,23 @@
 """
 This module provides a function, `cache_get`  which wraps the :meth:`get()`
 method from the `requests package`_ and provides persistent (thread and
-multiprocess-safe) caching to disk.
+multiprocess-safe) caching to disk through `ShelfCache`.
 
 It transparently handles retrieving resources from the cache, validating them,
-re-fetching stale resources including using etag and last-modified headers, and
-updating cached resources.
+re-fetching stale resources including using etag and last-modified headers when
+possible, and updating cached resources.
 
 Resources (even when stale) are never deleted from the cache. Pruning must be
-done separately, if needed.
+done separately, if needed (see the :meth:`prune_expired`, :meth:`prune_old`,
+and :meth:`clear` methods of `shelfcache`)
 
-Usage is as simple as initializing a ShelfCache object with a path where the
-database file should be created, and then calling the `cache_get` function with
-the URL to fetch::
+Usage is as simple as first initializing a ShelfCache object with a path where
+the database file should be created and a default expiration time for cached
+resources (seconds), and then calling the `cache_get` function with the URL to
+fetch::
 
     >>> from shelfcache import cache_get, ShelfCache
-    >>> cache = ShelfCache('path/to/cache.db')
+    >>> cache = ShelfCache('path/to/cache.db', exp_seconds=1200)
     >>> response = cache_get(cache, url='https://hnrss.org/newest')
     >>> response.status_code
     200

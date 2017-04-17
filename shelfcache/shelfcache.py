@@ -3,9 +3,20 @@ The `ShelfCache` class in this module implements a generic thread- and
 multiprocess-safe key-value caching store. The values can be any object which
 can be pickled.
 
-Caching to disk is handled by locking wrappers around the standard library's
-`Shelf` class. Two such wrappers are included in the `locked_shelf` module:
-`MutexShelf` and the flock-based `RWShelf` (which is used by default).
+When retrieving values (which is achieved with the :meth:`get` method),
+ShelfCache will always return the cached data along with a boolean indicating
+whether it is expired or not. Application code can then decide what to do with
+the data.
+
+No automatic database size management is done while saving or retrieving values,
+but applications/scripts can make use of the :meth:`prune_expired`,
+:meth:`prune_old`, and :meth:`clear` methods to delete old items.
+
+Caching to disk is handled by a locking wrapper around the standard library's
+`Shelf <https://docs.python.org/3/library/shelve.html>`_ class. Two
+implementations of the wrapper are included in the `locked_shelf` module:
+`MutexShelf` and the flock-based `RWShelf` (which is used by ShelfCache by
+default).
 
 For a similar approach (for Python 2) -- which implements caching on top of a
 locking wrapper around the shelve library -- see Doug Hellmann's feedcache
@@ -23,6 +34,7 @@ logger = logging.getLogger(__name__)
 CacheResult = NamedTuple('CacheResult', [('data', Any), ('expired', bool)])
 """
 The type returned when getting an item from the cache.
+
 :param data: The data field contains the actual cached data
 :param bool expired: A boolean indicating whether the cached data has expired
     (True==expired; False==fresh)
@@ -52,9 +64,9 @@ class ShelfCache:
                  Type[LockedShelf]=RWShelf) -> None:
         """
         :param db_path: Path to database (where it will be created if necessary)
-        :param exp_seconds: Default expiry time for which a cache entry should
-            be considered fresh (in seconds). A negative number means the item
-            will never expire.
+        :param exp_seconds: The default expiry time to use for a cached item (in
+            seconds). This can be overridden per-item in `create_or_update`. A
+            negative number means the item will never expire.
         :param shelf_t: The type of shelf to use (any sublcass of `LockedShelf`,
             ie `MutexShelf` or `RWShelf`)
         """

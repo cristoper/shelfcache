@@ -1,53 +1,65 @@
-feedfetch ReadMe
-================
+shelfcache ReadMe
+=================
 
-feedfetch is a Python3 package which provides a thread- and multiprocess-safe caching wrapper around the `Universal Feed Parser`_.
+shelfcache is a Python3 package which provides a thread- and multiprocess-safe
+key-value caching store on top of the standard library's `shelve module
+<https://docs.python.org/3/library/shelve.html>`_.
 
-Usage is as simple as initializing with a path where the database file should be created, and then calling the `FeedCache.fetch()` method with the URL to fetch:
+The package include three modules:
 
->>> from feedfetch import FeedCache
->>> cache = FeedCache('cache.db')
->>> feed = cache.fetch('https://hnrss.org/newest')
->>> for entry in feed.entries:
->>>     # Process feed, etc
->>>     print(entry.title)
->>>
->>> # Fetching a second time will be much faster as it will likely be
->>> # returned from cache:
->>> feed = cache.fetch('https://hnrss.org/newest')
+- ``shelfcache.py`` - Provides the main `ShelfCache` class::
 
-For a similar Python 2 module see Doug Hellmann's feedcache package/article:
-http://feedcache.readthedocs.io/en/latest/
+    >>> from shelfcache import ShelfCache
+    >>> cache = ShelfCache('cache.db')
+    >>> test_obj = ['any', 'thing', 'that', 'can', 'be', 'pickled']
+    >>> cache.create_or_update('key', test_obj)
+    >>> retrieved = cache.get('key')
+    >>> retrieved.data
+    ['any', 'thing', 'that', 'can', 'be', 'pickled']
+    >>> retrieved.expired
+    False
 
-.. _Universal Feed Parser: https://pypi.python.org/pypi/feedparser
+- ``cache_get.py`` - Provides a transparent persistent cache wrapper around the
+  ``get()`` method from the `requests package
+  <http://docs.python-requests.org/en/master/>`_ for GETting resources over
+  HTTP/HTTPS::
 
+    >>> from shelfcache import cache_get, ShelfCache
+    >>> cache = ShelfCache('path/to/cache.db')
+    >>> response = cache_get(cache, url='https://hnrss.org/newest')
+    >>> response.status_code
+    200
 
+- ``locked_shelf.py`` - Provides the locking wrappers around the standard
+  library's ``shelve`` module.
+    
 Installation
 ------------
 
 Install from this repository with pip::
 
-$ pip3 install git+git://github.com/cristoper/feedfetch.git@feedfetch#egg=feedfetch
+$ pip3 install git+git://github.com/cristoper/shelfcache.git#egg=shelfcache
 
 
 Documentation
 -------------
 
-https://feedfetch.readthedocs.io/en/latest/
+https://shelfcache.readthedocs.io/en/latest/
 
 Projects
 --------
 FeedMixer_
     A WSGI micro webservice for mixing Atom/RSS feeds
 
-If you use feedfetch in a project, add a link to it here and give me a pull request (or just mention it in an issue, and I'll add it)!
+If you use shelfcache in a project, add a link to it here and give me a pull
+request (or just mention it in an issue, and I'll add it)!
 
 .. _FeedMixer: https://github.com/cristoper/feedmixer
 
 Support
 -------
 
-Feel free to open an issue on Github for help: https://github.com/cristoper/feedfetch/issues
+Feel free to open an issue on Github for help: https://github.com/cristoper/shelfcache/issues
 
 License
 -------
