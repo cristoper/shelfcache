@@ -146,28 +146,42 @@ class ShelfCache:
     def __delitem__(self, key) -> None:
         self.delete(key)
 
-    def prune(self, older_than: Optional[datetime]=None) -> int:
-        """
-        :param older_than: Delete all items in cache older than the given
-            datetime. If `older_than` is None, use datetime.utcnow()
-
-        Returns:
-            The number of items that were pruned.
-        """
-        if older_than is None:
-            older_than = datetime.utcnow()
-
+    def __prune(self, dt: datetime, field_name='expire_dt') -> int:
         keys_to_delete = []
         with self.shelf_t(self.db_path, flag='c') as shelf:
             for key, item in shelf.items():
-                exp_d = item.expire_dt
-                if exp_d < older_than:
+                exp_d = getattr(item, field_name)
+                if exp_d < dt:
                     keys_to_delete.append(key)
 
             for k in keys_to_delete:
                 del shelf[k]
                 logger.info("Pruned item for key: {}".format(key))
         return len(keys_to_delete)
+
+    def prune_expired(self, older_than: Optional[datetime]=None) -> int:
+        """
+        :param older_than: Delete all items in cache which have expired since
+        the given datetime. If `older_than` is None, use datetime.utcnow()
+
+        Returns:
+            The number of items that were pruned.
+        """
+        if older_than is None:
+            older_than = datetime.utcnow()
+        return self.__prune(older_than, field_name='expire_dt')
+
+    def prune_old(self, older_than: Optional[datetime]=None) -> int:
+        """
+        :param older_than: Delete all items in cache updated before the
+        the given datetime. If `older_than` is None, use datetime.utcnow()
+
+        Returns:
+            The number of items that were pruned.
+        """
+        if older_than is None:
+            older_than = datetime.utcnow()
+        return self.__prune(older_than, field_name='updated_dt')
 
     def clear(self) -> None:
         """
