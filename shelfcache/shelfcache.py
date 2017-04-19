@@ -124,7 +124,7 @@ class ShelfCache:
             if key in shelf.keys():
                 # If this item already exists, preserve its created_dt and
                 # update its updated_dt
-                item.created_dt = shelf.get('key').created_dt
+                item.created_dt = shelf.get(key).created_dt
                 item.updated_dt = datetime.utcnow()
                 logger.info("Updated item for key: {}".format(key))
             else:
