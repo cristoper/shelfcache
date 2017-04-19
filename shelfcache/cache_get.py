@@ -40,7 +40,7 @@ NOT_MODIFIED = 304
 logger = logging.getLogger(__name__)
 
 
-def cache_get(cache: ShelfCache, url: str, headers={},
+def cache_get(cache: ShelfCache, url: str, headers=None,
               get_meth: Callable=requests.get, **kwargs) -> requests.Response:
     """
     A wrapper around `requests.get()` which uses an on-disk cache.
@@ -73,6 +73,7 @@ def cache_get(cache: ShelfCache, url: str, headers={},
     """
     etag = None
     lastmod = None
+    if headers is None: headers = {}
 
     logger.info("Fetching item for url: {}".format(url))
     item = cache.get(url)
