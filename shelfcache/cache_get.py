@@ -89,6 +89,10 @@ def cache_get(cache: ShelfCache, url: str, headers=None,
         logger.info("Stale item found in cache: {}".format(url))
         etag = cached.headers.get('etag')
         etag = etag.lstrip('W/') if etag else None  # strip weak etag
+
+        # Ignore -gzip suffix added by Apache mod_deflate
+        # https://bz.apache.org/bugzilla/show_bug.cgi?id=45023
+        etag = re.sub('-gzip"$', '"', etag) if etag else None
         lastmod = cached.headers.get('last-modified')
     else:
         logger.info("No item in cache for url: {}".format(url))
