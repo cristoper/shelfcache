@@ -126,5 +126,7 @@ def cache_get(cache: ShelfCache, url: str, headers={},
             min_age = min(int(ma_match.group(1)), cache.exp_seconds)
     else:
         min_age = cache.exp_seconds
+    logger.info("Saving resource for {} with exp_seconds: {}"
+                .format(url, min_age))
     cache.create_or_update(url, data=fetched, exp_seconds=min_age)
     return fetched
