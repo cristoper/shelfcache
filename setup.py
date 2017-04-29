@@ -18,19 +18,19 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='feedfetch',
+    name='shelfcache',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.3.1',
+    version='1.3.2',
 
     description='''Provides Thread- and multiprocess-safe caching to feedparser
     (https://pypi.python.org/pypi/feedparser)''',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/cristoper/feedfetch',
+    url='https://github.com/cristoper/shelfcache',
 
     # Author details
     author='',
