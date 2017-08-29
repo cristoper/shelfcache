@@ -160,6 +160,13 @@ class ShelfCache:
         d, _ = self[key]
         self.create_or_update(key, data=d, expire_dt=expire_dt)
 
+    def replace_data(self, key, data: Optional[object]=None) -> None:
+        """
+        Update a cached item's data without affecting its expire_dt.
+        """
+        item = self.get_item(key)
+        self.create_or_update(key, data=data, expire_dt=item.expire_dt)
+
     def delete(self, key: str) -> None:
         """
         Delete `key` from cache database.

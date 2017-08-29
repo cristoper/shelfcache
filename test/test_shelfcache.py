@@ -278,6 +278,34 @@ class TestSet(unittest.TestCase):
         self.assertIsNone(exp)
 
 
+class TestReplaceData(unittest.TestCase):
+    def test_update_expires(self):
+        """
+        Set an item, then ensure its data can be updated.
+        """
+        wrapped_dict = {}
+        mock_shelf = make_mock_locked_shelf(wrapped_dict)
+        mock_dict = mock_shelf.return_value.__enter__.return_value
+
+        # DUT:
+        sc = ShelfCache(db_path='dummy', shelf_t=mock_shelf)
+
+        # Set some data
+        sc['key'] = 'val'
+        item = mock_dict.get('key')
+        old_data = item.data
+        old_exp = item.expire_dt
+        self.assertEqual('val', old_data)
+
+        # Update expires
+        sc.replace_data('key', 'newval')
+        item = mock_dict.get('key')
+        new_data, exp = item.data, item.expire_dt
+
+        self.assertEqual('newval', new_data)
+        self.assertEqual(old_exp, exp)
+
+
 class TestUpdateExpires(unittest.TestCase):
     def test_update_expires(self):
         """
