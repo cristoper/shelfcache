@@ -134,7 +134,7 @@ class ShelfCache:
     def __setitem__(self, key, value) -> None:
         """
         Create or update `key` with the given `data`. The item will never
-        expire. To set an expiry datetime, use :meth:`set_or_update` instead.
+        expire. To set an expiry datetime, use :meth:`create_or_update` instead.
         """
         self.create_or_update(key, data=value)
 
