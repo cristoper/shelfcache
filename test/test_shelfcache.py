@@ -28,16 +28,17 @@ class TestGet(unittest.TestCase):
         """
         Test trying to read a non-existing cache database.
         """
-        # Report the database file as non-existent:
-        mock_os_path_exists.return_value = False
-
         mock_shelf = make_mock_locked_shelf()
+
+        def file_not_found(*args, **kwargs):
+            raise FileNotFoundError
+
+        mock_shelf.side_effect = file_not_found
         mock_dict = mock_shelf.return_value.__enter__.return_value
 
         # DUT:
         sc = ShelfCache(db_path='dummy', shelf_t=mock_shelf)
         val = sc.get('key')
-
         self.assertIsNone(val)
         mock_dict.get.assert_not_called()
 

@@ -26,7 +26,6 @@ from .locked_shelf import LockedShelf, RWShelf
 from datetime import datetime, timedelta
 from typing import Type, Optional, NamedTuple, Any
 import logging
-import os.path
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +77,7 @@ class ShelfCache:
         """
         Get item from database and check if it is expired.
         """
-        if os.path.exists(self.db_path):
+        try:
             with self.shelf_t(self.db_path, flag='r') as shelf:
                 val = shelf.get(key)  # type: Optional[Item]
                 if val is not None:
@@ -88,7 +87,7 @@ class ShelfCache:
                     else:
                         expired = val.expire_dt < now
                     return CacheResult(data=val.data, expired=expired)
-        else:
+        except FileNotFoundError:
             logger.info("Cache db file does not exist at {}"
                         .format(self.db_path))
         return None
