@@ -1,6 +1,6 @@
 from shelfcache.shelfcache import ShelfCache, Item
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from shelfcache.locked_shelf import RWShelf
 from datetime import datetime, timedelta
 
@@ -23,8 +23,7 @@ def make_mock_locked_shelf(wrapped_dict=None):
 
 
 class TestGet(unittest.TestCase):
-    @patch('os.path.exists')
-    def test_no_db(self, mock_os_path_exists):
+    def test_no_db(self):
         """
         Test trying to read a non-existing cache database.
         """
@@ -42,15 +41,11 @@ class TestGet(unittest.TestCase):
         self.assertIsNone(val)
         mock_dict.get.assert_not_called()
 
-    @patch('os.path.exists')
-    def test_getitem_missing_key(self, mock_os_path_exists):
+    def test_getitem_missing_key(self):
         """
         Trying to get a non-existent key with __getitem__ should throw a
         KeyError.
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         mock_shelf = make_mock_locked_shelf()
 
         # DUT:
@@ -59,14 +54,10 @@ class TestGet(unittest.TestCase):
         with self.assertRaises(KeyError):
             sc['nonkey']
 
-    @patch('os.path.exists')
-    def test_get_missing_key(self, mock_os_path_exists):
+    def test_get_missing_key(self):
         """
         Trying to get a non-existent key with get() should return None.
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         mock_shelf = make_mock_locked_shelf()
         mock_dict = mock_shelf.return_value.__enter__.return_value
 
@@ -77,13 +68,10 @@ class TestGet(unittest.TestCase):
         self.assertIsNone(val)
         mock_dict.get.assert_called_once_with('nonkey')
 
-    @patch('os.path.exists')
-    def test_getitem_fresh(self, mock_os_path_exists):
+    def test_getitem_fresh(self):
         """
         Get a fresh item with __getitem__.
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
         exp_time = datetime.utcnow() + timedelta(days=1)
         test_item = Item(data='data', expire_dt=exp_time)
         test_val = {'key': test_item}
@@ -96,13 +84,10 @@ class TestGet(unittest.TestCase):
         self.assertEqual('data', data)
         self.assertFalse(exp)
 
-    @patch('os.path.exists')
-    def test_get_fresh(self, mock_os_path_exists):
+    def test_get_fresh(self):
         """
         Get a fresh item with get().
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
         exp_time = datetime.utcnow() + timedelta(days=1)
         test_item = Item(data='data', expire_dt=exp_time)
         test_val = {'key': test_item}
@@ -115,14 +100,10 @@ class TestGet(unittest.TestCase):
         self.assertEqual('data', data)
         self.assertFalse(exp)
 
-    @patch('os.path.exists')
-    def test_getitem_stale(self, mock_os_path_exists):
+    def test_getitem_stale(self):
         """
         Get a fresh item with __getitem__.
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         exp_time = datetime.utcnow() + timedelta(days=-1)
         test_item = Item(data='data', expire_dt=exp_time)
         test_val = {'key': test_item}
@@ -135,14 +116,10 @@ class TestGet(unittest.TestCase):
         self.assertEqual('data', data)
         self.assertTrue(exp)
 
-    @patch('os.path.exists')
-    def test_get_stale(self, mock_os_path_exists):
+    def test_get_stale(self):
         """
         Get a fresh item with get().
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         exp_time = datetime.utcnow() + timedelta(days=-1)
         test_item = Item(data='data', expire_dt=exp_time)
         test_val = {'key': test_item}
@@ -252,14 +229,10 @@ class TestSet(unittest.TestCase):
 
 
 class TestUpdateExpires(unittest.TestCase):
-    @patch('os.path.exists')
-    def test_update_expires(self, mock_os_path_exists):
+    def test_update_expires(self):
         """
         Set an item, then ensure its expires date can be updated.
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         wrapped_dict = {}
         mock_shelf = make_mock_locked_shelf(wrapped_dict)
         mock_dict = mock_shelf.return_value.__enter__.return_value
@@ -284,14 +257,10 @@ class TestUpdateExpires(unittest.TestCase):
 
 
 class TestDel(unittest.TestCase):
-    @patch('os.path.exists')
-    def test_delete(self, mock_os_path_exists):
+    def test_delete(self):
         """
         Set an item and then test that it can be deleted.
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         mock_shelf = make_mock_locked_shelf()
         mock_dict = mock_shelf.return_value.__enter__.return_value
 
@@ -309,14 +278,10 @@ class TestDel(unittest.TestCase):
         val = sc.get('key')
         self.assertIsNone(val)
 
-    @patch('os.path.exists')
-    def test_delitem(self, mock_os_path_exists):
+    def test_delitem(self):
         """
         Set an item and then test that it can be deleted using the del operator
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         mock_shelf = make_mock_locked_shelf()
         mock_dict = mock_shelf.return_value.__enter__.return_value
 
@@ -336,14 +301,10 @@ class TestDel(unittest.TestCase):
 
 
 class TestClear(unittest.TestCase):
-    @patch('os.path.exists')
-    def test_clear(self, mock_os_path_exists):
+    def test_clear(self):
         """
         Set some items then test that they are all deleted.
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         wrapped_dict = {}
         mock_shelf = make_mock_locked_shelf(wrapped_dict)
         mock_dict = mock_shelf.return_value.__enter__.return_value
@@ -371,14 +332,10 @@ class TestClear(unittest.TestCase):
 
 
 class TestPrune(unittest.TestCase):
-    @patch('os.path.exists')
-    def test_prune_old(self, mock_os_path_exists):
+    def test_prune_old(self):
         """
         Create some items and then test that the oldest is pruned.
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         mock_shelf = make_mock_locked_shelf()
 
         # DUT:
@@ -395,14 +352,10 @@ class TestPrune(unittest.TestCase):
         self.assertIsNone(old)
         self.assertEqual('new', new.data)
 
-    @patch('os.path.exists')
-    def test_prune_expired(self, mock_os_path_exists):
+    def test_prune_expired(self):
         """
         Create some items and then test that the expired one is pruned.
         """
-        # so we don't need an actual db file:
-        mock_os_path_exists.return_value = True
-
         mock_shelf = make_mock_locked_shelf()
         tomorrow = datetime.utcnow() + timedelta(days=1)
         yesterday = datetime.utcnow() + timedelta(days=-1)
