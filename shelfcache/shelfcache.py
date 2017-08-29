@@ -92,6 +92,20 @@ class ShelfCache:
                         .format(self.db_path))
         return None
 
+    def get_item(self, key) -> Optional[Item]:
+        """
+        Get item from database. Like get(), but return an Item (with all
+        metadata) instead of the simpler CacheResult.
+        """
+        try:
+            with self.shelf_t(self.db_path, flag='r') as shelf:
+                val = shelf.get(key)  # type: Optional[Item]
+                return val
+        except FileNotFoundError:
+            logger.info("Cache db file does not exist at {}"
+                        .format(self.db_path))
+        return None
+
     def __getitem__(self, key) -> CacheResult:
         val = self.get(key)
         if val is None:

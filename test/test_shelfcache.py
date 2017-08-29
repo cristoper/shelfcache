@@ -133,6 +133,56 @@ class TestGet(unittest.TestCase):
         self.assertTrue(exp)
 
 
+class TestGetItem(unittest.TestCase):
+    def test_no_db(self):
+        """
+        Test trying to read a non-existing cache database.
+        """
+        mock_shelf = make_mock_locked_shelf()
+
+        def file_not_found(*args, **kwargs):
+            raise FileNotFoundError
+
+        mock_shelf.side_effect = file_not_found
+        mock_dict = mock_shelf.return_value.__enter__.return_value
+
+        # DUT:
+        sc = ShelfCache(db_path='dummy', shelf_t=mock_shelf)
+        val = sc.get_item('key')
+        self.assertIsNone(val)
+        mock_dict.get.assert_not_called()
+
+    def test_get_item_missing_key(self):
+        """
+        Trying to get a non-existent key with get() should return None.
+        """
+        mock_shelf = make_mock_locked_shelf()
+        mock_dict = mock_shelf.return_value.__enter__.return_value
+
+        # DUT:
+        sc = ShelfCache(db_path='dummy', shelf_t=mock_shelf)
+
+        val = sc.get_item('nonkey')
+        self.assertIsNone(val)
+        mock_dict.get.assert_called_once_with('nonkey')
+
+    def test_get_item_fresh(self):
+        """
+        Get a fresh item with get().
+        """
+        exp_time = datetime.utcnow() + timedelta(days=1)
+        test_item = Item(data='data', expire_dt=exp_time)
+        test_val = {'key': test_item}
+
+        mock_shelf = make_mock_locked_shelf(test_val)
+
+        # DUT:
+        sc = ShelfCache(db_path='dummy', shelf_t=mock_shelf)
+        item = sc.get_item('key')
+        self.assertEqual('data', item.data)
+        self.assertEqual(exp_time, item.expire_dt)
+
+
 class TestSet(unittest.TestCase):
     def test_setitem(self):
         """
