@@ -56,10 +56,17 @@ request (or just mention it in an issue, and I'll add it)!
 
 .. _FeedMixer: https://github.com/cristoper/feedmixer
 
-Support
--------
+Help
+----
 
 Feel free to open an issue on Github for help: https://github.com/cristoper/shelfcache/issues
+
+Support the project
+-------------------
+
+If this package was useful to you, please consider supporting my work on this and other open-source projects by making a small (a couple $) one-time donation: `donate via PayPal <https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=E78W4LH2NADXE>`_
+
+If you're looking to contract a Python developer, I might be able to help. Contact me, Chris, at dev@orangenoiseproduction.com
 
 License
 -------
@@ -67,3 +74,4 @@ License
     The project is licensed under the WTFPL_ license, without warranty of any kind.
 
 .. _WTFPL: http://www.wtfpl.net/about/
+
