@@ -32,6 +32,14 @@ The package include three modules:
 
 - ``locked_shelf.py`` - Provides the locking wrappers around the standard
   library's ``shelve`` module.
+
+.. note:: On Mac OS X, the `flock` placed on the db file by this module interacts
+  with gdbm's own lock, causing a deadlock. The current workaround is to not use
+  gdbm on Mac OS X (use berkeley db instead) -- one way to do this is to simply
+  not install `gdbm` and Python will choose a different implementation; if you use
+  homebrew to install python on Mac OS X, remove `gdbm` by running `brew uninstall
+  --ignore-dependencies gdbm`
+
     
 Installation
 ------------
