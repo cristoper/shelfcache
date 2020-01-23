@@ -1,9 +1,9 @@
 shelfcache ReadMe
 =================
 
-shelfcache is a Python3 package which provides a thread- and multiprocess-safe
-key-value caching store on top of the standard library's `shelve module
-<https://docs.python.org/3/library/shelve.html>`_.
+shelfcache is a Python3 package which provides a persistent (on-disk) thread-
+and multiprocess-safe key-value caching store on top of the standard library's
+`shelve module <https://docs.python.org/3/library/shelve.html>`_.
 
 The package include three modules:
 
@@ -57,7 +57,8 @@ https://shelfcache.readthedocs.io/en/latest/
 Projects
 --------
 FeedMixer_
-    A WSGI micro webservice for mixing Atom/RSS feeds
+    A WSGI micro webservice for mixing Atom/RSS feeds. (Version 3.0 of
+    FeedMixer moved away from shelfcache to a RAM-only cache)
 
 If you use shelfcache in a project, add a link to it here and give me a pull
 request (or just mention it in an issue, and I'll add it)!
