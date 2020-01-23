@@ -5,6 +5,10 @@ shelfcache is a Python3 package which provides a persistent (on-disk) thread-
 and multiprocess-safe key-value caching store on top of the standard library's
 `shelve module <https://docs.python.org/3/library/shelve.html>`_.
 
+It also includes a wrapper around `requests.get()` (a popular HTTP library for Python) which transparently handles retrieving resources from the cache, validating them (respecting the Cache-Control header), re-fetching stale resources including using etag and last-modified headers when possible, and updating cached resources.
+
+If caching HTTP requests is your main objective, then consider the CacheControl_ package instead which is more flexible and better tested.
+
 The package include three modules:
 
 - ``shelfcache.py`` - Provides the main `ShelfCache` class::
@@ -33,6 +37,7 @@ The package include three modules:
 - ``locked_shelf.py`` - Provides the locking wrappers around the standard
   library's ``shelve`` module.
 
+.. _CacheControl: https://github.com/ionrock/cachecontrol
 .. note:: On Mac OS X, the `flock` placed on the db file by this module interacts
   with gdbm's own lock, causing a deadlock. The current workaround is to not use
   gdbm on Mac OS X (use berkeley db instead) -- one way to do this is to simply
