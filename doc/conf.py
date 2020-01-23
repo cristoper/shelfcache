@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# feedfetch documentation build configuration file, created by
+# shelfcache documentation build configuration file, created by
 # sphinx-quickstart on Wed Apr 12 19:31:35 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -51,9 +51,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'feedfetch'
-copyright = '2017, chris b'
-author = 'chris b'
+project = 'shelfcache'
+copyright = '2020, a. cynic'
+author = 'a. cynic'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -105,7 +105,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'feedfetchdoc'
+htmlhelp_basename = 'shelfcachedoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -132,8 +132,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'feedfetch.tex', 'feedfetch Documentation',
-     'chris b', 'manual'),
+    (master_doc, 'shelfcache.tex', 'shelfcache Documentation',
+     'a. cynic', 'manual'),
 ]
 
 
