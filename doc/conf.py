@@ -142,7 +142,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'feedfetch', 'feedfetch Documentation',
+    (master_doc, 'shelfcache', 'shelfcache Documentation',
      [author], 1)
 ]
 
@@ -153,8 +153,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'feedfetch', 'feedfetch Documentation',
-     author, 'feedfetch', 'One line description of project.',
+    (master_doc, 'shelfcache', 'shelfcache Documentation',
+     author, 'shelfcache', 'One line description of project.',
      'Miscellaneous'),
 ]
 
