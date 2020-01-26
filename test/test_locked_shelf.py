@@ -11,6 +11,14 @@ logger = logging.getLogger(__name__)
 #logging.basicConfig(level=logging.INFO)
 TEST_DB = 'test_locked.db'
 
+def remove_db(filename):
+    # Some implementations of dbm add the .db suffix, and some don't
+    if os.path.exists(filename):
+        created_name = filename
+    else:
+        created_name = filename + ".db"
+    os.remove(created_name)
+
 
 class TestMutex(unittest.TestCase):
     def read_db(self, sleep=0, lock=None):
@@ -128,7 +136,7 @@ class TestMutex(unittest.TestCase):
         self.assertEqual(self.result['val'], "test")
 
     def tearDown(self):
-        os.remove(TEST_DB)
+        remove_db(TEST_DB)
 
 
 class TestRW(unittest.TestCase):
@@ -287,4 +295,4 @@ class TestRW(unittest.TestCase):
         self.assertEqual(self.result['val'], "test")
 
     def tearDown(self):
-        os.remove(TEST_DB)
+        remove_db(TEST_DB)
