@@ -25,8 +25,7 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version='1.4.0',
 
-    description='''Provides Thread- and multiprocess-safe caching to feedparser
-    (https://pypi.python.org/pypi/feedparser)''',
+    description='''Provides a thread- and multiprocess-safe interface to the standard shelve module''',
     long_description=long_description,
 
     # The project's main homepage.
@@ -59,7 +58,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='feedparser cache',
+    keywords='cache shelve http requests',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
