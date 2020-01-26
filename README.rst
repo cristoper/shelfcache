@@ -5,9 +5,14 @@ shelfcache is a Python3 package which provides a persistent (on-disk) thread-
 and multiprocess-safe key-value caching store on top of the standard library's
 `shelve module <https://docs.python.org/3/library/shelve.html>`_.
 
-It also includes a wrapper around `requests.get()` (a popular HTTP library for Python) which transparently handles retrieving resources from the cache, validating them (respecting the Cache-Control header), re-fetching stale resources including using etag and last-modified headers when possible, and updating cached resources.
+It also includes a wrapper around `requests.get()` (a popular HTTP library for
+Python) which transparently handles retrieving resources from the cache,
+validating them (respecting the Cache-Control header), re-fetching stale
+resources including using etag and last-modified headers when possible, and
+updating cached resources.
 
-If caching HTTP requests is your main objective, then consider the CacheControl_ package instead which is more flexible and better tested.
+But if caching HTTP requests is your main objective, then consider the
+CacheControl_ package instead which is more flexible and better tested.
 
 The package include three modules:
 
