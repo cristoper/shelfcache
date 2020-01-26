@@ -79,21 +79,21 @@ class TestCacheGet(unittest.TestCase):
         mock_getter.assert_called_once_with('fake_url', headers={})
 
     def test_fresh(self):
-        """Simulate a freshly cached feed and verify that cache_get returns
+        """Simulate a freshly cached resource and verify that cache_get returns
         it."""
         # setup mock locked_shelf:
         fresh = build_response()
         mock_shelf = mock_shelfcache(CacheResult(data=fresh,
                                                  expired=False))
 
-        # setup mock feedparser.parse method
+        # setup mock requests.get method
         mock_getter = build_getter(fresh)
 
         # DUT:
         resp = cache_get(mock_shelf, url='fake_url', get_meth=mock_getter)
 
         self.assertEqual(resp, fresh)
-        # since feed is resh, assert that the parser is not called:
+        # since resource is fresh, assert that the http client is not called:
         mock_getter.assert_not_called()
 
     def test_stale_not_modified(self):
@@ -104,7 +104,7 @@ class TestCacheGet(unittest.TestCase):
         mock_shelf = mock_shelfcache(CacheResult(data=stale,
                                                  expired=True))
 
-        # setup mock feedparser.parse method
+        # setup mock requests.get method
         mock_getter = build_getter(stale)
 
         # DUT:
@@ -116,14 +116,14 @@ class TestCacheGet(unittest.TestCase):
 
     def test_stale_modified(self):
         """Simulate a stale cached item and verify that cache_get fetches it and
-        then updates with new feed from server."""
+        then updates with new resource from server."""
         # setup mocked ShelfCache
         stale = build_response(status=OK)
         mock_shelf = mock_shelfcache(CacheResult(data=stale,
                                                  expired=True))
 
-        # setup mock feedparser.parse method  (and mock headers so we can verify
-        # that FeedCache parsed the cache-control header)
+        # setup mock requests.get method (and mock headers so we can verify
+        # that the cache-control header was used)
         mock_headers = MagicMock(spec=dict)
         mock_headers.get.return_value = 'max-age=10'
         new = build_response(status=OK)
@@ -137,7 +137,7 @@ class TestCacheGet(unittest.TestCase):
         mock_getter.assert_called_once_with('fake_url', headers=h)
         mock_headers.get.assert_called_with('cache-control')
 
-        # Make sure feed was updated:
+        # Make sure resource was updated:
         mock_shelf.create_or_update.assert_called_with('fake_url',
                                                        data=new,
                                                        exp_seconds=10)
@@ -149,7 +149,7 @@ class TestCacheGet(unittest.TestCase):
         feed404 = build_response(status=404)
         mock_shelf = mock_shelfcache(None)
 
-        # setup mock feedparser.parse method
+        # setup mock requests.get
         mock_getter = build_getter(feed404)
 
         with self.assertRaises(requests.exceptions.HTTPError) as e:

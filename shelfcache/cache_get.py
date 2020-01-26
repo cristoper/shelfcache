@@ -57,7 +57,7 @@ def cache_get(cache: ShelfCache, url: str, headers=None,
     server (using etag and/or last-modified headers if available so that the
     server can return a cached version).
 
-    When the response is received from the server, then the feed is updated
+    When the response is received from the server, then the item is updated
     in the on-disk cache.
 
     :param cache: The ShelfCache to handle the cache
@@ -114,7 +114,7 @@ def cache_get(cache: ShelfCache, url: str, headers=None,
     logger.debug("Resource: {}".format(fetched))
 
     if fetched.status_code == NOT_MODIFIED:
-        # Source says feed is still fresh
+        # Source says resource is still fresh
         logger.info("Server says resource is still fresh: {}".format(url))
         new_headers = fetched.headers
         fetched = cached
