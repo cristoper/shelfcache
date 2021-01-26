@@ -1,3 +1,10 @@
+Status update: I've decided to archive this repository. If you use it and find
+a bug, feel free to file get in touch and I'll take a look. But for general
+multi-thread/multi-process persistence in Python I recommend using sqlite
+instead. There are sqlite3 wrappers in the standard library:
+https://docs.python.org/3/library/sqlite3.html
+
+
 shelfcache ReadMe
 =================
 
